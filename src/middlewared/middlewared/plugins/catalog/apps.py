@@ -29,6 +29,8 @@ class AppService(Service):
         Bool('installed', required=True),
         Bool('recommended', required=True),
         Datetime('last_update', required=True),
+        List('capabilities', required=True),
+        List('run_as_context', required=True),
         List('categories', required=True),
         List('maintainers', required=True),
         List('tags', required=True),
