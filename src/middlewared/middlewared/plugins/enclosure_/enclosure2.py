@@ -150,8 +150,9 @@ class Enclosure2Service(Service):
             label['encid']: label['label']
             for label in self.middleware.call_sync('datastore.query', 'truenas.enclosurelabel')
         }
-        dmi = self.middleware.call_sync('system.dmidecode_info')['system-product-name']
-        for i in self.get_ses_enclosures(dmi) + self.map_nvme(dmi) + self.middleware.call_sync('enclosure2.map_jbof'):
+        dmi = self.middleware.call_sync('system.dmidecode_info')
+        spn, sv = dmi['system-product-name'], dmi['system-version']
+        for i in self.get_ses_enclosures(spn, sv) + self.map_nvme(spn) + self.middleware.call_sync('enclosure2.map_jbof'):
             if i.pop('should_ignore'):
                 continue
 
