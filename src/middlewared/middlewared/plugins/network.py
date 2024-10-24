@@ -11,7 +11,7 @@ from pydantic.networks import IPvAnyAddress
 import middlewared.sqlalchemy as sa
 from middlewared.service import CallError, CRUDService, filterable, pass_app, private
 from middlewared.utils import filter_list
-from middlewared.schema import accepts, Bool, Dict, Int, List, Patch, returns, Str, ValidationErrors
+from middlewared.schema import accepts, IPAddr, Bool, Dict, Int, List, Patch, returns, Str, ValidationErrors
 from middlewared.validators import Range
 from .interface.netif import netif
 from .interface.interface_types import InterfaceType
