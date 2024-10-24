@@ -76,17 +76,19 @@ class NetworkInterfaceEntry(BaseModel):
     vlan_tag: int = Field(ge=1, le=4094)
     vlan_pcp: int = Field(ge=0, le=7)
     mtu: int = Field(None, ge=68, le=9216)
+    id: int
+
+class NetworkInterfaceCreate(NetworkInterfaceEntry):
+    id: Excluded = excluded_field()
 
 class NetworkInterfaceCreateArgs(BaseModel):
-    data: NetworkInterfaceEntry
+    data: NetworkInterfaceCreate
 
 class NetworkInterfaceCreateResult(BaseModel):
-    pass
+    result: NetworkInterfaceEntry
 
 class NetworkInterfaceUpdateArgs(BaseModel):
-    id: Excluded = excluded_field()
     data: NetworkInterfaceEntry
-
 
 
 class NetworkGeneralSummaryArgs(BaseModel):
