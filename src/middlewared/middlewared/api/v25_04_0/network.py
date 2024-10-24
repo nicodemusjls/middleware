@@ -11,8 +11,20 @@ __all__ = [
     "NetworkInterfaceUpdateArgs",
     "NetworkInterfaceCreateResult",
     "NetworkGeneralSummaryArgs",
-    "NetworkGeneralSummaryResult"
+    "NetworkGeneralSummaryResult",
+    "NetworkCommitArgs",
+    "NetworkCommitResult"
 ]
+
+class NetworkCommitOptions(BaseModel):
+    rollback: bool = True
+    checkin_timeout: int = 60
+
+class NetworkCommitArgs(BaseModel):
+    options: NetworkCommitOptions
+
+class NetworkCommitResult(BaseModel):
+    result: None
 
 class NetworkSaveDefaultRouteArgs(BaseModel):
     gateway: IPvAnyAddress

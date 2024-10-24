@@ -6,7 +6,7 @@ from itertools import zip_longest
 from ipaddress import ip_address, ip_interface
 
 from middlewared.api import api_method
-from middlewared.api.current import NetworkSaveDefaultRouteArgs, NetworkSaveDefaultRouteResult, NetworkInterfaceCreateArgs, NetworkInterfaceCreateResult
+from middlewared.api.current import NetworkSaveDefaultRouteArgs, NetworkSaveDefaultRouteResult, NetworkInterfaceCreateArgs, NetworkInterfaceCreateResult, NetworkCommitArgs, NetworkCommitResult
 from pydantic.networks import IPvAnyAddress
 import middlewared.sqlalchemy as sa
 from middlewared.service import CallError, CRUDService, filterable, pass_app, private
@@ -666,12 +666,8 @@ class InterfaceService(CRUDService):
             if remaining > 0:
                 return int(remaining)
 
-    @accepts(Dict(
-        'options',
-        Bool('rollback', default=True),
-        Int('checkin_timeout', default=60),
-    ), roles=['NETWORK_INTERFACE_WRITE'])
-    @returns()
+
+    @api_method(NetworkCommitArgs, NetworkCommitResult)
     async def commit(self, options):
         """
         Commit/apply pending interfaces changes.
@@ -702,7 +698,7 @@ class InterfaceService(CRUDService):
         else:
             self._original_datastores = {}
 
-    """@accepts(Dict(
+    @accepts(Dict(
         'interface_create',
         Str('name'),
         Str('description', default=''),
@@ -747,8 +743,7 @@ class InterfaceService(CRUDService):
         Int('vlan_pcp', validators=[Range(min_=0, max_=7)], null=True),
         Int('mtu', validators=[Range(min_=68, max_=9216)], default=None, null=True),
         register=True
-    ))"""
-    @api_method(NetworkInterfaceCreateArgs, NetworkInterfaceCreateResult)
+    ))
     async def do_create(self, data):
         """
         Create virtual interfaces (Link Aggregation, VLAN)
