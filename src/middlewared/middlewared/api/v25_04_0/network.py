@@ -18,7 +18,7 @@ class NetworkSaveDefaultRouteArgs(BaseModel):
     gateway: IPvAnyAddress
 
 class NetworkSaveDefaultRouteResult(BaseModel):
-    pass
+    result: None
 
 
 class NetworkInterfaceTypeEnum(str, Enum):
