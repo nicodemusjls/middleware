@@ -6,7 +6,7 @@ from itertools import zip_longest
 from ipaddress import ip_address, ip_interface
 
 from middlewared.api import api_method
-from middlewared.api.current import NetworkSaveDefaultRouteArgs, NetworkSaveDefaultRouteResult, NetworkInterfaceCreateArgs, NetworkInterfaceCreateResult, NetworkCommitArgs, NetworkCommitResult
+from middlewared.api.current import NetworkSaveDefaultRouteArgs, NetworkSaveDefaultRouteResult, NetworkInterfaceCreateArgs, NetworkInterfaceCreateResult, NetworkCommitArgs, NetworkCommitResult, NetworkCheckinWaitingArgs, NetworkCheckinWaitingResult, NetworkCancelRollbackArgs, NetworkCancelRollbackResult, NetworkCheckinArgs, NetworkCheckinResult
 from pydantic.networks import IPvAnyAddress
 import middlewared.sqlalchemy as sa
 from middlewared.service import CallError, CRUDService, filterable, pass_app, private
@@ -632,8 +632,7 @@ class InterfaceService(CRUDService):
         if clear_cache:
             self._original_datastores = {}
 
-    @accepts(roles=['NETWORK_INTERFACE_WRITE'])
-    @returns()
+    @api_method(NetworkCheckinArgs, NetworkCheckinResult, roles=['NETWORK_INTERFACE_WRITE'])
     async def checkin(self):
         """
         If this method is called after interface changes have been committed and within the checkin timeout,
@@ -643,8 +642,7 @@ class InterfaceService(CRUDService):
         """
         return await self.checkin_impl(clear_cache=True)
 
-    @accepts(roles=['NETWORK_INTERFACE_WRITE'])
-    @returns()
+    @api_method(NetworkCancelRollbackArgs, NetworkCancelRollbackResult, roles=['NETWORK_INTERFACE_WRITE'])
     async def cancel_rollback(self):
         """
         If this method is called after interface changes have been committed and within the checkin timeout,
@@ -653,8 +651,7 @@ class InterfaceService(CRUDService):
         """
         return await self.checkin_impl(clear_cache=False)
 
-    @accepts(roles=['NETWORK_INTERFACE_WRITE'])
-    @returns(Int('remaining_seconds', null=True))
+    @api_method(NetworkCheckinWaitingArgs, NetworkCheckinWaitingResult, roles=['NETWORK_INTERFACE_WRITE'])
     async def checkin_waiting(self):
         """
         Returns whether we are waiting user to check in the applied network changes
@@ -667,7 +664,7 @@ class InterfaceService(CRUDService):
                 return int(remaining)
 
 
-    @api_method(NetworkCommitArgs, NetworkCommitResult)
+    @api_method(NetworkCommitArgs, NetworkCommitResult, roles=['NETWORK_INTERFACE_WRITE'])
     async def commit(self, options):
         """
         Commit/apply pending interfaces changes.

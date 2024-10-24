@@ -13,8 +13,35 @@ __all__ = [
     "NetworkGeneralSummaryArgs",
     "NetworkGeneralSummaryResult",
     "NetworkCommitArgs",
-    "NetworkCommitResult"
+    "NetworkCommitResult",
+    "NetworkCheckinWaitingArgs",
+    "NetworkCheckinWaitingResult",
+    "NetworkCancelRollbackArgs",
+    "NetworkCancelRollbackResult",
+    "NetworkCheckinArgs",
+    "NetworkCheckinResult"
 ]
+
+class NetworkCheckinArgs(BaseModel):
+    pass
+
+class NetworkCheckinResult(BaseModel):
+    result: None
+
+class NetworkCancelRollbackArgs(BaseModel):
+    pass
+
+class NetworkCancelRollbackResult(BaseModel):
+    result: None
+
+class NetworkCheckinWaitingResultItem(BaseModel):
+    remaining_seconds: int | None
+
+class NetworkCheckinWaitingResult(BaseModel):
+    result: NetworkCheckinWaitingResultItem
+
+class NetworkCheckinWaitingArgs(BaseModel):
+    pass
 
 class NetworkCommitOptions(BaseModel):
     rollback: bool = True
