@@ -10,6 +10,7 @@ from .disk import *  # noqa
 from .failover_reboot import *  # noqa
 from .group import *  # noqa
 from .keychain import *  # noqa
+from .network import * # noqa
 from .privilege import *  # noqa
 from .rdma import *  # noqa
 from .smartctl import * # noqa

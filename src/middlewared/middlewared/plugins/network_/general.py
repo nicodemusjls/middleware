@@ -2,6 +2,8 @@ from collections import defaultdict
 
 from middlewared.service import Service
 from middlewared.schema import Dict, List, IPAddr, returns, accepts
+from middlewared.api import api_method
+from middlewared.api.current import NetworkGeneralSummaryArgs, NetworkGeneralSummaryResult
 
 
 class NetworkGeneralService(Service):
@@ -10,15 +12,8 @@ class NetworkGeneralService(Service):
         namespace = 'network.general'
         cli_namespace = 'network.general'
 
-    @accepts(roles=['NETWORK_GENERAL_READ'])
-    @returns(
-        Dict(
-            'network_summary',
-            Dict('ips', additional_attrs=True, required=True),
-            List('default_routes', items=[IPAddr('default_route')], required=True),
-            List('nameservers', items=[IPAddr('nameserver')], required=True),
-        )
-    )
+
+    @api_method(NetworkGeneralSummaryArgs, NetworkGeneralSummaryResult, roles=["NETWORK_GENERAL_READ"])
     async def summary(self):
         """
         Retrieve general information for current Network.

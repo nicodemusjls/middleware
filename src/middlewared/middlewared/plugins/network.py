@@ -5,10 +5,13 @@ from collections import defaultdict
 from itertools import zip_longest
 from ipaddress import ip_address, ip_interface
 
+from middlewared.api import api_method
+from middlewared.api.current import NetworkSaveDefaultRouteArgs, NetworkSaveDefaultRouteResult, NetworkInterfaceCreateArgs, NetworkInterfaceCreateResult
+from pydantic.networks import IPvAnyAddress
 import middlewared.sqlalchemy as sa
 from middlewared.service import CallError, CRUDService, filterable, pass_app, private
 from middlewared.utils import filter_list
-from middlewared.schema import accepts, Bool, Dict, Int, IPAddr, List, Patch, returns, Str, ValidationErrors
+from middlewared.schema import accepts, Bool, Dict, Int, List, Patch, returns, Str, ValidationErrors
 from middlewared.validators import Range
 from .interface.netif import netif
 from .interface.interface_types import InterfaceType
@@ -426,8 +429,7 @@ class InterfaceService(CRUDService):
         dbgw = self.middleware.call_sync('network.configuration.config')['ipv4gateway']
         return rtgw and (dbgw != rtgw.gateway.exploded)
 
-    @accepts(IPAddr('gw', v6=False, required=True))
-    @returns()
+    @api_method(NetworkSaveDefaultRouteArgs, NetworkSaveDefaultRouteResult)
     async def save_default_route(self, gw):
         """
         This method exists _solely_ to provide a "warning" and therefore
@@ -700,7 +702,7 @@ class InterfaceService(CRUDService):
         else:
             self._original_datastores = {}
 
-    @accepts(Dict(
+    """@accepts(Dict(
         'interface_create',
         Str('name'),
         Str('description', default=''),
@@ -745,7 +747,8 @@ class InterfaceService(CRUDService):
         Int('vlan_pcp', validators=[Range(min_=0, max_=7)], null=True),
         Int('mtu', validators=[Range(min_=68, max_=9216)], default=None, null=True),
         register=True
-    ))
+    ))"""
+    @api_method(NetworkInterfaceCreateArgs, NetworkInterfaceCreateResult)
     async def do_create(self, data):
         """
         Create virtual interfaces (Link Aggregation, VLAN)
