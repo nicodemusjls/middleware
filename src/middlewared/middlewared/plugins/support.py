@@ -17,6 +17,16 @@ import middlewared.sqlalchemy as sa
 from middlewared.utils.network import INTERNET_TIMEOUT
 from middlewared.validators import Email
 from middlewared.utils import PRODUCT
+from middlewared.api import api_method
+from middlewared.api.current import (
+    SupportIsAvailableArgs, SupportIsAvailableResult,
+    SupportIsAvailableAndEnabledArgs, SupportIsAvailableAndEnabledResult,
+    SupportFieldsArgs, SupportFieldsResult,
+    SupportSimilarIssuesArgs, SupportSimilarIssuesResult,
+    SupportNewTicketArgs, SupportNewTicketResult,
+    SupportAttachTicketArgs, SupportAttachTicketResult,
+    SupportAttachTicketMaxSizeArgs, SupportAttachTicketMaxSizeResult
+)
 
 ADDRESS = 'support-proxy.ixsystems.com'
 
@@ -101,8 +111,7 @@ class SupportService(ConfigService):
 
         return await self.config()
 
-    @accepts(roles=['SUPPORT_READ'])
-    @returns(Bool('proactive_support_is_available'))
+    @api_method(SupportIsAvailableArgs, SupportIsAvailableResult, roles=['SUPPORT_READ'])
     async def is_available(self):
         """
         Returns whether Proactive Support is available for this product type and current license.
@@ -120,8 +129,7 @@ class SupportService(ConfigService):
 
         return license_['contract_type'] in ['SILVER', 'GOLD']
 
-    @accepts(roles=['SUPPORT_READ'])
-    @returns(Bool('proactive_support_is_available_and_enabled'))
+    @api_method(SupportIsAvailableAndEnabledArgs, SupportIsAvailableAndEnabledResult, roles=['SUPPORT_READ'])
     async def is_available_and_enabled(self):
         """
         Returns whether Proactive Support is available and enabled.
@@ -129,8 +137,7 @@ class SupportService(ConfigService):
 
         return await self.is_available() and (await self.config())['enabled']
 
-    @accepts(roles=['SUPPORT_READ'])
-    @returns(List('support_fields', items=[List('support_field', items=[Str('field')])]))
+    @api_method(SupportFieldsArgs, SupportFieldsResult, roles=['SUPPORT_READ'])
     async def fields(self):
         """
         Returns list of pairs of field names and field titles for Proactive Support.
@@ -146,13 +153,7 @@ class SupportService(ConfigService):
             ['secondary_phone', 'Secondary Contact Phone'],
         ]
 
-    @accepts(Str('query'), roles=['SUPPORT_READ'])
-    @returns(List('similar_issues', items=[Dict(
-        'similar_issue',
-        Str('url'),
-        Str('summary'),
-        additional_attrs=True,
-    )]))
+    @api_method(SupportSimilarIssuesArgs, SupportSimilarIssuesResult, roles=['SUPPORT_READ'])
     async def similar_issues(self, query):
         await self.middleware.call('network.general.will_perform_activity', 'support')
 
@@ -168,28 +169,7 @@ class SupportService(ConfigService):
 
         return data
 
-    @accepts(Dict(
-        'new_ticket',
-        Str('title', required=True, max_length=200),
-        Str('body', required=True, max_length=20000),
-        Str('category'),
-        Bool('attach_debug', default=False),
-        Password('token'),
-        Str('type', enum=['BUG', 'FEATURE']),
-        Str('criticality'),
-        Str('environment', max_length=None),
-        Str('phone'),
-        Str('name'),
-        Str('email', validators=[Email()]),
-        List('cc', items=[Str('email', validators=[Email()])])
-    ), roles=['SUPPORT_WRITE', 'READONLY_ADMIN'])
-    @returns(Dict(
-        'new_ticket_response',
-        Int('ticket', null=True),
-        Str('url', null=True),
-        Bool('has_debug'),
-        register=True
-    ))
+    @api_method(SupportNewTicketArgs, SupportNewTicketResult, roles=['SUPPORT_WRITE', 'READONLY_ADMIN'])
     @job()
     async def new_ticket(self, job, data):
         """
