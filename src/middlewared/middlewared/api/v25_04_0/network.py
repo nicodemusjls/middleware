@@ -1,26 +1,144 @@
 from enum import Enum
+from typing_extensions import Literal
 
-from middlewared.api.base import BaseModel, Excluded, excluded_field
+from middlewared.api.base import BaseModel, Excluded, excluded_field, ForUpdateMetaclass
 from pydantic import IPvAnyAddress, Field
 
 __all__ = [
-    "NetworkSaveDefaultRouteArgs",
-    "NetworkSaveDefaultRouteResult",
-    "NetworkInterfaceEntry",
-    "NetworkInterfaceCreateArgs",
-    "NetworkInterfaceUpdateArgs",
-    "NetworkInterfaceCreateResult",
-    "NetworkGeneralSummaryArgs",
-    "NetworkGeneralSummaryResult",
-    "NetworkCommitArgs",
-    "NetworkCommitResult",
-    "NetworkCheckinWaitingArgs",
-    "NetworkCheckinWaitingResult",
-    "NetworkCancelRollbackArgs",
-    "NetworkCancelRollbackResult",
-    "NetworkCheckinArgs",
-    "NetworkCheckinResult"
+    "NetworkSaveDefaultRouteArgs", "NetworkSaveDefaultRouteResult",
+    "NetworkGeneralSummaryArgs", "NetworkGeneralSummaryResult",
+    "NetworkCommitArgs", "NetworkCommitResult",
+    "NetworkCheckinWaitingArgs", "NetworkCheckinWaitingResult",
+    "NetworkCancelRollbackArgs", "NetworkCancelRollbackResult",
+    "NetworkCheckinArgs", "NetworkCheckinResult",
+    "NetworkRollbackArgs", "NetworkRollbackResult",
+    "NetworkHasPendingChangesArgs", "NetworkHasPendingChangesResult",
+    "NetworkDefaultRouteWillBeRemovedArgs", "NetworkDefaultRouteWillBeRemovedResult",
+    "NetworkInterfaceIpInUseArgs", "NetworkInterfaceIpInUseResult",
+    "NetworkVlanParentInterfaceChoicesArgs", "NetworkVlanParentInterfaceChoicesResult",
+    "NetworkLagPortsChoicesArgs", "NetworkLagPortsChoicesResult",
+    "NetworkBridgeMembersChoicesArgs", "NetworkBridgeMembersChoicesResult",
+    "NetworkChoicesArgs", "NetworkChoicesResult",
+    "NetworkLacpduRateChoicesArgs", "NetworkLacpduRateChoicesResult",
+    "XmitHashPolicyChoicesArgs", "XmitHashPolicyChoicesResult",
+    "NetworkWebsocketInterfaceArgs", "NetworkWebsocketInterfaceResult",
+    "NetworkWebsocketLocalIpArgs", "NetworkWebsocketLocalIpResult",
+    "NetworkInterfaceCreateArgs", "NetworkInterfaceCreateResult",
+    "NetworkInterfaceUpdateArgs", "NetworkInterfaceUpdateResult",
 ]
+
+class NetworkWebsocketLocalIpArgs(BaseModel):
+    pass
+
+class NetworkWebsocketLocalIpResult(BaseModel):
+    result: IPvAnyAddress | None
+
+
+class NetworkWebsocketInterfaceArgs(BaseModel):
+    pass
+
+class NetworkWebsocketInterfaceResult(BaseModel):
+    result: str | None
+
+
+class XmitHashPolicyChoicesArgs(BaseModel):
+    pass
+
+class XmitHashPolicyChoicesResult(BaseModel):
+    result: dict
+
+
+class NetworkLacpduRateChoicesArgs(BaseModel):
+    pass
+
+class NetworkLacpduRateChoicesResult(BaseModel):
+    result: dict
+
+
+class NetworkInterfaceChoicesTypeEnum(str, Enum):
+    BRIDGE = "BRIDGE"
+    LINK_AGGREGATION = "LINK_AGGREGATION"
+    PHYSICAL = "PHYSICAL"
+    UNKNOWN = "UNKNOWN"
+    VLAN = "VLAN"
+
+class NetworkChoicesArgsData(BaseModel):
+    bridge_members: bool = False
+    lag_ports: bool = False
+    vlan_parent: bool = True
+    exclude: list[str] = ["epair", "tap", "vnet"]
+    exclude_types: list[NetworkInterfaceChoicesTypeEnum] = []
+    include: list = []
+
+class NetworkChoicesArgs(BaseModel):
+    options: NetworkChoicesArgsData
+
+class NetworkChoicesResult(BaseModel):
+    result: dict
+
+
+class NetworkBridgeMembersChoicesArgs(BaseModel):
+    id: str | None = None
+
+class NetworkBridgeMembersChoicesResult(BaseModel):
+    result: dict
+
+
+class NetworkLagPortsChoicesArgs(BaseModel):
+    id: str | None = None
+
+class NetworkLagPortsChoicesResult(BaseModel):
+    result: dict
+
+
+class NetworkVlanParentInterfaceChoicesArgs(BaseModel):
+    pass
+
+class NetworkVlanParentInterfaceChoicesResult(BaseModel):
+    result: dict
+
+
+class NetworkInterfaceIpInUseChoices(BaseModel):
+    ipv4: bool = True
+    ipv6: bool = True
+    ipv6_link_local: bool = False
+    loopback: bool = False
+    any: bool = False
+    static: bool = False
+
+class NetworkInterfaceIpInUseArgs(BaseModel):
+    data: NetworkInterfaceIpInUseChoices = NetworkInterfaceIpInUseChoices()
+
+class NetworkInterfaceIpInUseResultItem(BaseModel):
+    type: str
+    address: IPvAnyAddress
+    netmask: int
+    broadcast: str
+
+class NetworkInterfaceIpInUseResult(BaseModel):
+    result: list[NetworkInterfaceIpInUseResultItem]
+
+
+class NetworkDefaultRouteWillBeRemovedArgs(BaseModel):
+    pass
+
+class NetworkDefaultRouteWillBeRemovedResult(BaseModel):
+    result: bool
+
+
+class NetworkHasPendingChangesArgs(BaseModel):
+    pass
+
+class NetworkHasPendingChangesResult(BaseModel):
+    result: bool
+
+
+class NetworkRollbackArgs(BaseModel):
+    pass
+
+class NetworkRollbackResult(BaseModel):
+    result: None
+
 
 class NetworkCheckinArgs(BaseModel):
     pass
@@ -28,11 +146,13 @@ class NetworkCheckinArgs(BaseModel):
 class NetworkCheckinResult(BaseModel):
     result: None
 
+
 class NetworkCancelRollbackArgs(BaseModel):
     pass
 
 class NetworkCancelRollbackResult(BaseModel):
     result: None
+
 
 class NetworkCheckinWaitingResultItem(BaseModel):
     remaining_seconds: int | None
@@ -47,11 +167,13 @@ class NetworkCommitOptions(BaseModel):
     rollback: bool = True
     checkin_timeout: int = 60
 
+
 class NetworkCommitArgs(BaseModel):
     options: NetworkCommitOptions
 
 class NetworkCommitResult(BaseModel):
     result: None
+
 
 class NetworkSaveDefaultRouteArgs(BaseModel):
     gateway: IPvAnyAddress
@@ -59,11 +181,6 @@ class NetworkSaveDefaultRouteArgs(BaseModel):
 class NetworkSaveDefaultRouteResult(BaseModel):
     result: None
 
-
-class NetworkInterfaceTypeEnum(str, Enum):
-    BRIDGE = "BRIDGE"
-    LINK_AGGREGATION = "LINK_AGGREGATION"
-    VLAN = "VLAN"
 
 class NetworkInterfaceAddrTypeEnum(str, Enum):
     INET = "INET"
@@ -82,52 +199,58 @@ class XmitHashChoices(str, Enum):
     LAYER34 = "LAYER3+4"
 
 class LacpduRateChoices(str, Enum):
-    SLOW = 'SLOW'
-    FAST = 'FAST'
+    SLOW = "SLOW"
+    FAST = "FAST"
 
 class NetworkInterfaceFailoverAlias(BaseModel):
-    type: NetworkInterfaceAddrTypeEnum
-    address: IPvAnyAddress
+    type: NetworkInterfaceAddrTypeEnum | None = None
+    address: IPvAnyAddress | None = None
 
 class NetworkInterfaceAlias(NetworkInterfaceFailoverAlias):
     netmask: int
 
 class NetworkInterfaceEntry(BaseModel):
-    name: str
     description: str = ''
-    type: NetworkInterfaceTypeEnum
     ipv4_dhcp: bool = False
     ipv6_auto: bool = False
-    aliases: list[NetworkInterfaceAlias]
+    aliases: list[NetworkInterfaceAlias] = []
     failover_critical: bool = False
-    failover_group: int
-    failover_vhid: int = Field(ge=1, le=255)
-    failover_aliases: list[NetworkInterfaceFailoverAlias]
-    failover_virtual_aliases: list[NetworkInterfaceFailoverAlias]
-    bridge_members: list
+    failover_group: int | None = None
+    failover_vhid: int | None = Field(None, ge=1, le=255)
+    failover_aliases: list[NetworkInterfaceFailoverAlias] = []
+    failover_virtual_aliases: list[NetworkInterfaceFailoverAlias] = []
+    bridge_members: list = []
     enable_learning: bool = True
     stp: bool = True
-    lag_protocol: NetworkInterfaceLagProtocolEnum
+    lag_protocol: str | None = None
     xmit_hash_policy: XmitHashChoices | None = None
     lacpdu_rate: LacpduRateChoices | None = None
-    lag_ports: list[str]
-    vlan_parent_interface: str
-    vlan_tag: int = Field(ge=1, le=4094)
-    vlan_pcp: int = Field(ge=0, le=7)
+    lag_ports: list[str] = []
+    vlan_parent_interface: str | None = None
+    vlan_tag: int | None = Field(None, ge=1, le=4094)
+    vlan_pcp: int | None = Field(None, ge=0, le=7)
     mtu: int = Field(None, ge=68, le=9216)
-    id: int
+    options: str = ""
 
 class NetworkInterfaceCreate(NetworkInterfaceEntry):
-    id: Excluded = excluded_field()
+    name: str
+    type: Literal["BRIDGE", "LINK_AGGREGATION", "VLAN"]
 
 class NetworkInterfaceCreateArgs(BaseModel):
     data: NetworkInterfaceCreate
 
 class NetworkInterfaceCreateResult(BaseModel):
-    result: NetworkInterfaceEntry
+    result: NetworkInterfaceEntry | None
+
+class NetworkInterfaceUpdateResult(BaseModel):
+    result: NetworkInterfaceEntry | None
+
+class NetworkInterfaceUpdate(NetworkInterfaceEntry, metaclass=ForUpdateMetaclass):
+    pass
 
 class NetworkInterfaceUpdateArgs(BaseModel):
-    data: NetworkInterfaceEntry
+    id: str
+    data: NetworkInterfaceUpdate
 
 
 class NetworkGeneralSummaryArgs(BaseModel):

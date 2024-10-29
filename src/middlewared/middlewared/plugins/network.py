@@ -6,7 +6,27 @@ from itertools import zip_longest
 from ipaddress import ip_address, ip_interface
 
 from middlewared.api import api_method
-from middlewared.api.current import NetworkSaveDefaultRouteArgs, NetworkSaveDefaultRouteResult, NetworkInterfaceCreateArgs, NetworkInterfaceCreateResult, NetworkCommitArgs, NetworkCommitResult, NetworkCheckinWaitingArgs, NetworkCheckinWaitingResult, NetworkCancelRollbackArgs, NetworkCancelRollbackResult, NetworkCheckinArgs, NetworkCheckinResult
+from middlewared.api.current import (
+    NetworkSaveDefaultRouteArgs, NetworkSaveDefaultRouteResult,
+    NetworkCommitArgs, NetworkCommitResult,
+    NetworkCheckinWaitingArgs, NetworkCheckinWaitingResult,
+    NetworkCancelRollbackArgs, NetworkCancelRollbackResult,
+    NetworkCheckinArgs, NetworkCheckinResult,
+    NetworkRollbackArgs, NetworkRollbackResult,
+    NetworkHasPendingChangesArgs, NetworkHasPendingChangesResult,
+    NetworkDefaultRouteWillBeRemovedArgs, NetworkDefaultRouteWillBeRemovedResult,
+    NetworkInterfaceIpInUseArgs, NetworkInterfaceIpInUseResult,
+    NetworkVlanParentInterfaceChoicesArgs, NetworkVlanParentInterfaceChoicesResult,
+    NetworkLagPortsChoicesArgs, NetworkLagPortsChoicesResult,
+    NetworkBridgeMembersChoicesArgs, NetworkBridgeMembersChoicesResult,
+    NetworkChoicesArgs, NetworkChoicesResult,
+    NetworkLacpduRateChoicesArgs, NetworkLacpduRateChoicesResult,
+    XmitHashPolicyChoicesArgs, XmitHashPolicyChoicesResult,
+    NetworkWebsocketLocalIpArgs, NetworkWebsocketLocalIpResult,
+    NetworkWebsocketInterfaceArgs, NetworkWebsocketInterfaceResult,
+    NetworkInterfaceCreateArgs, NetworkInterfaceCreateResult,
+    NetworkInterfaceUpdateArgs, NetworkInterfaceUpdateResult
+)
 from pydantic.networks import IPvAnyAddress
 import middlewared.sqlalchemy as sa
 from middlewared.service import CallError, CRUDService, filterable, pass_app, private
@@ -408,8 +428,7 @@ class InterfaceService(CRUDService):
 
         return iface
 
-    @accepts()
-    @returns(Bool())
+    @api_method(NetworkSaveDefaultRouteArgs, NetworkSaveDefaultRouteResult)
     def default_route_will_be_removed(self):
         """
         On a fresh install of SCALE, dhclient is started for every interface so IP
@@ -594,16 +613,14 @@ class InterfaceService(CRUDService):
     async def get_original_datastores(self):
         return self._original_datastores
 
-    @accepts(roles=['NETWORK_INTERFACE_WRITE'])
-    @returns(Bool())
+    @api_method(NetworkHasPendingChangesArgs, NetworkHasPendingChangesResult, roles=['NETWORK_INTERFACE_WRITE'])
     async def has_pending_changes(self):
         """
         Returns whether there are pending interfaces changes to be applied or not.
         """
         return bool(self._original_datastores)
 
-    @accepts(roles=['NETWORK_INTERFACE_WRITE'])
-    @returns()
+    @api_method(NetworkRollbackArgs, NetworkRollbackResult, roles=['NETWORK_INTERFACE_WRITE'])
     async def rollback(self):
         """
         Rollback pending interfaces changes.
@@ -695,52 +712,7 @@ class InterfaceService(CRUDService):
         else:
             self._original_datastores = {}
 
-    @accepts(Dict(
-        'interface_create',
-        Str('name'),
-        Str('description', default=''),
-        Str('type', enum=['BRIDGE', 'LINK_AGGREGATION', 'VLAN'], required=True),
-        Bool('ipv4_dhcp', default=False),
-        Bool('ipv6_auto', default=False),
-        List('aliases', unique=True, items=[
-            Dict(
-                'interface_alias',
-                Str('type', required=True, default='INET', enum=['INET', 'INET6']),
-                IPAddr('address', required=True),
-                Int('netmask', required=True),
-                register=True,
-            ),
-        ]),
-        Bool('failover_critical', default=False),
-        Int('failover_group', null=True),
-        Int('failover_vhid', null=True, validators=[Range(min_=1, max_=255)]),
-        List('failover_aliases', items=[
-            Dict(
-                'interface_failover_alias',
-                Str('type', required=True, default='INET', enum=['INET', 'INET6']),
-                IPAddr('address', required=True),
-            )
-        ]),
-        List('failover_virtual_aliases', items=[
-            Dict(
-                'interface_virtual_alias',
-                Str('type', required=True, default='INET', enum=['INET', 'INET6']),
-                IPAddr('address', required=True),
-            )
-        ]),
-        List('bridge_members'),
-        Bool('enable_learning', default=True),
-        Bool('stp', default=True),
-        Str('lag_protocol', enum=['LACP', 'FAILOVER', 'LOADBALANCE', 'ROUNDROBIN', 'NONE']),
-        Str('xmit_hash_policy', enum=[i.value for i in XmitHashChoices], default=None, null=True),
-        Str('lacpdu_rate', enum=[i.value for i in LacpduRateChoices], default=None, null=True),
-        List('lag_ports', items=[Str('interface')]),
-        Str('vlan_parent_interface'),
-        Int('vlan_tag', validators=[Range(min_=1, max_=4094)]),
-        Int('vlan_pcp', validators=[Range(min_=0, max_=7)], null=True),
-        Int('mtu', validators=[Range(min_=68, max_=9216)], default=None, null=True),
-        register=True
-    ))
+    @api_method(NetworkInterfaceCreateArgs, NetworkInterfaceCreateResult)
     async def do_create(self, data):
         """
         Create virtual interfaces (Link Aggregation, VLAN)
@@ -882,8 +854,9 @@ class InterfaceService(CRUDService):
         ifaces = {i['name']: i for i in await self.middleware.call('interface.query', _get_filters('id'))}
         ds_ifaces = await self.middleware.call('datastore.query', 'network.interfaces', _get_filters('int_interface'))
 
+        #assert False, f"{data}\n\n\n{ifaces}"
         if 'name' in data and data['name'] in ifaces:
-            verrors.add(f'{schema_name}.name', 'Interface name is already in use.')
+            verrors.add(f'{schema_name}.name', f'Interface name is already in use. {data}\n\n\n\n\n\n{ifaces}')
 
         if data.get('ipv4_dhcp') and any(
             filter(lambda x: x['int_dhcp'] and not ifaces[x['int_interface']]['fake'], ds_ifaces)
@@ -977,7 +950,7 @@ class InterfaceService(CRUDService):
                     verrors.add(f'{schema_name}.name', str(e))
             parent = data.get('vlan_parent_interface')
             if parent not in ifaces:
-                verrors.add(f'{schema_name}.vlan_parent_interface', 'Not a valid interface.')
+                verrors.add(f'{schema_name}.vlan_parent_interface', f'Not a valid interface.yoo {data}')
             elif parent in lag_used:
                 verrors.add(
                     f'{schema_name}.vlan_parent_interface',
@@ -1212,16 +1185,8 @@ class InterfaceService(CRUDService):
                 )
         return lagports_ids
 
-    @accepts(
-        Str('id'),
-        Patch(
-            'interface_create',
-            'interface_update',
-            ('rm', {'name': 'type'}),
-            ('attr', {'update': True}),
-        )
-    )
-    async def do_update(self, oid, data):
+    @api_method(NetworkInterfaceUpdateArgs, NetworkInterfaceUpdateResult)
+    async def do_update(self, id, data):
         """
         Update Interface of `id`.
 
@@ -1234,7 +1199,7 @@ class InterfaceService(CRUDService):
         verrors = ValidationErrors()
         await self.middleware.call('network.common.check_failover_disabled', 'interface.update', verrors)
 
-        iface = await self.get_instance(oid)
+        iface = await self.get_instance(id)
 
         new = iface.copy()
         new.update(data)
@@ -1253,7 +1218,7 @@ class InterfaceService(CRUDService):
         try:
 
             config = await self.middleware.call(
-                'datastore.query', 'network.interfaces', [('int_interface', '=', oid)]
+                'datastore.query', 'network.interfaces', [('int_interface', '=', id)]
             )
             if not config:
                 async for i in self.__create_interface_datastore(new, {
@@ -1441,8 +1406,7 @@ class InterfaceService(CRUDService):
 
         return oid
 
-    @accepts()
-    @returns(IPAddr(null=True))
+    @api_method(NetworkWebsocketLocalIpArgs, NetworkWebsocketLocalIpResult)
     @pass_app()
     async def websocket_local_ip(self, app):
         """Returns the local ip address for this websocket session."""
@@ -1451,8 +1415,7 @@ class InterfaceService(CRUDService):
         except AttributeError:
             pass
 
-    @accepts()
-    @returns(Str(null=True))
+    @api_method(NetworkWebsocketInterfaceArgs, NetworkWebsocketInterfaceResult)
     @pass_app()
     async def websocket_interface(self, app):
         """
@@ -1466,8 +1429,7 @@ class InterfaceService(CRUDService):
             for _ in filter(lambda x: x['address'] == local_ip, iface['aliases'] + iface['state']['aliases']):
                 return iface
 
-    @accepts()
-    @returns(Dict(*[Str(i.value, enum=[i.value]) for i in XmitHashChoices]))
+    @api_method(XmitHashPolicyChoicesArgs, XmitHashPolicyChoicesResult)
     async def xmit_hash_policy_choices(self):
         """
         Available transmit hash policies for the LACP or LOADBALANCE
@@ -1475,24 +1437,14 @@ class InterfaceService(CRUDService):
         """
         return {i.value: i.value for i in XmitHashChoices}
 
-    @accepts()
-    @returns(Dict(*[Str(i.value, enum=[i.value]) for i in LacpduRateChoices]))
+    @api_method(NetworkLacpduRateChoicesArgs, NetworkLacpduRateChoicesResult)
     async def lacpdu_rate_choices(self):
         """
         Available lacpdu rate policies for the LACP lagg type interfaces.
         """
         return {i.value: i.value for i in LacpduRateChoices}
 
-    @accepts(Dict(
-        'options',
-        Bool('bridge_members', default=False),
-        Bool('lag_ports', default=False),
-        Bool('vlan_parent', default=True),
-        List('exclude', default=['epair', 'tap', 'vnet']),
-        List('exclude_types', items=[Str('type', enum=[type_.name for type_ in InterfaceType])]),
-        List('include'),
-    ))
-    @returns(Dict('available_interfaces', additional_attrs=True))
+    @api_method(NetworkChoicesArgs, NetworkChoicesResult)
     async def choices(self, options):
         """
         Choices of available network interfaces.
@@ -1528,8 +1480,7 @@ class InterfaceService(CRUDService):
                     choices.pop(interface['vlan_parent_interface'], None)
         return choices
 
-    @accepts(Str('id', null=True, default=None))
-    @returns(Dict(additional_attrs=True))
+    @api_method(NetworkBridgeMembersChoicesArgs, NetworkBridgeMembersChoicesResult)
     async def bridge_members_choices(self, id_):
         """
         Return available interface choices that can be added to a `br` (bridge) interface.
@@ -1561,8 +1512,7 @@ class InterfaceService(CRUDService):
 
         return {k: v for k, v in include.items() if k not in exclude}
 
-    @accepts(Str('id', null=True, default=None))
-    @returns(Dict(additional_attrs=True))
+    @api_method(NetworkLagPortsChoicesArgs, NetworkLagPortsChoicesResult)
     async def lag_ports_choices(self, id_):
         """
         Return available interface choices that can be added to a `bond` (lag) interface.
@@ -1607,8 +1557,7 @@ class InterfaceService(CRUDService):
 
         return {k: v for k, v in include.items() if k not in exclude}
 
-    @accepts()
-    @returns(Dict(additional_attrs=True))
+    @api_method(NetworkVlanParentInterfaceChoicesArgs, NetworkVlanParentInterfaceChoicesResult)
     async def vlan_parent_interface_choices(self):
         """
         Return available interface choices for `vlan_parent_interface` attribute.
@@ -1792,25 +1741,8 @@ class InterfaceService(CRUDService):
         except Exception:
             self.logger.error('Failed to run DHCP for {}'.format(name), exc_info=True)
 
-    @accepts(
-        Dict(
-            'ips',
-            Bool('ipv4', default=True),
-            Bool('ipv6', default=True),
-            Bool('ipv6_link_local', default=False),
-            Bool('loopback', default=False),
-            Bool('any', default=False),
-            Bool('static', default=False),
-        )
-    )
-    @returns(List('in_use_ips', items=[Dict(
-        'in_use_ip',
-        Str('type', required=True),
-        IPAddr('address', required=True),
-        Int('netmask', required=True),
-        Str('broadcast'),
-    )]))
-    def ip_in_use(self, choices):
+    @api_method(NetworkInterfaceIpInUseArgs, NetworkInterfaceIpInUseResult)
+    def ip_in_use(self, data):
         """
         Get all IPv4 / Ipv6 from all valid interfaces, excluding tap and epair.
 
@@ -1839,7 +1771,7 @@ class InterfaceService(CRUDService):
         """
         list_of_ip = []
         static_ips = {}
-        if choices['static']:
+        if data['static']:
             licensed = self.middleware.call_sync('failover.licensed')
             for i in self.middleware.call_sync('interface.query'):
                 if licensed:
@@ -1849,15 +1781,15 @@ class InterfaceService(CRUDService):
                     for alias in i['aliases']:
                         static_ips[alias['address']] = alias['address']
 
-        if choices['any']:
-            if choices['ipv4']:
+        if data['any']:
+            if data['ipv4']:
                 list_of_ip.append({
                     'type': 'INET',
                     'address': '0.0.0.0',
                     'netmask': 0,
                     'broadcast': '255.255.255.255',
                 })
-            if choices['ipv6']:
+            if data['ipv6']:
                 list_of_ip.append({
                     'type': 'INET6',
                     'address': '::',
@@ -1866,7 +1798,7 @@ class InterfaceService(CRUDService):
                 })
 
         ignore_nics = self.middleware.call_sync('interface.internal_interfaces')
-        if choices['loopback']:
+        if data['loopback']:
             ignore_nics.remove('lo')
             static_ips['127.0.0.1'] = '127.0.0.1'
             static_ips['::1'] = '::1'
@@ -1880,13 +1812,13 @@ class InterfaceService(CRUDService):
                 # might no longer possibly exist when we try to retrieve data from it
                 pass
             else:
-                for alias_dict in filter(lambda d: not choices['static'] or d['address'] in static_ips, aliases_list):
+                for alias_dict in filter(lambda d: not data['static'] or d['address'] in static_ips, aliases_list):
 
-                    if choices['ipv4'] and alias_dict['type'] == 'INET':
+                    if data['ipv4'] and alias_dict['type'] == 'INET':
                         list_of_ip.append(alias_dict)
 
-                    if choices['ipv6'] and alias_dict['type'] == 'INET6':
-                        if not choices['ipv6_link_local']:
+                    if data['ipv6'] and alias_dict['type'] == 'INET6':
+                        if not data['ipv6_link_local']:
                             if ipaddress.ip_address(alias_dict['address']) in ipaddress.ip_network('fe80::/64'):
                                 continue
                         list_of_ip.append(alias_dict)

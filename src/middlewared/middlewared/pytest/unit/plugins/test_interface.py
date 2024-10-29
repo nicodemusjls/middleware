@@ -114,9 +114,11 @@ async def test__interfaces_service__create_bridge_invalid_ports():
     m['interface.query'] = Mock(return_value=INTERFACES)
     m['datastore.query'] = Mock(return_value=[])
     m['network.common.check_failover_disabled'] = Mock()
+    m['interface.validate_name'] = Mock()
 
     with pytest.raises(ValidationErrors) as ve:
         await create_service(m, InterfaceService).do_create({
+            'name': 'br0',
             'type': 'BRIDGE',
             'bridge_members': ['em0', 'igb2'],
         })
@@ -130,9 +132,11 @@ async def test__interfaces_service__create_bridge_invalid_ports_used():
     m['interface.query'] = Mock(return_value=INTERFACES_WITH_BRIDGE)
     m['datastore.query'] = Mock(return_value=[])
     m['network.common.check_failover_disabled'] = Mock()
+    m['interface.validate_name'] = Mock()
 
     with pytest.raises(ValidationErrors) as ve:
         await create_service(m, InterfaceService).do_create({
+            'name': 'br0',
             'type': 'BRIDGE',
             'bridge_members': ['em0'],
         })
@@ -147,9 +151,11 @@ async def test__interfaces_service__create_lagg_invalid_ports():
     m['interface.lag_supported_protocols'] = Mock(return_value=['LACP'])
     m['datastore.query'] = Mock(return_value=[])
     m['network.common.check_failover_disabled'] = Mock()
+    m['interface.validate_name'] = Mock()
 
     with pytest.raises(ValidationErrors) as ve:
         await create_service(m, InterfaceService).do_create({
+            'name': 'bond0',
             'type': 'LINK_AGGREGATION',
             'lag_protocol': 'LACP',
             'lag_ports': ['em0', 'igb2'],
@@ -165,9 +171,11 @@ async def test__interfaces_service__create_lagg_invalid_ports_cloned():
     m['interface.lag_supported_protocols'] = Mock(return_value=['LACP'])
     m['datastore.query'] = mock_datastore_query_side_effect()
     m['network.common.check_failover_disabled'] = Mock()
+    m['interface.validate_name'] = Mock()
 
     with pytest.raises(ValidationErrors) as ve:
         await create_service(m, InterfaceService).do_create({
+            'name': 'bond0',
             'type': 'LINK_AGGREGATION',
             'lag_protocol': 'LACP',
             'lag_ports': ['em1', 'vlan5'],
@@ -183,9 +191,11 @@ async def test__interfaces_service__create_lagg_invalid_ports_used():
     m['interface.lag_supported_protocols'] = Mock(return_value=['LACP'])
     m['datastore.query'] = Mock(return_value=[])
     m['network.common.check_failover_disabled'] = Mock()
+    m['interface.validate_name'] = Mock()
 
     with pytest.raises(ValidationErrors) as ve:
         await create_service(m, InterfaceService).do_create({
+            'name': 'bond0',
             'type': 'LINK_AGGREGATION',
             'lag_protocol': 'LACP',
             'lag_ports': ['em0'],
@@ -225,6 +235,7 @@ async def test__interfaces_service__lagg_update_members_invalid(attr_val):
     m['interface.query'] = m._query_filter(INTERFACES_WITH_LAG)
     m['datastore.query'] = Mock(return_value=[])
     m['network.common.check_failover_disabled'] = Mock()
+    m['interface.validate_name'] = Mock()
 
     with pytest.raises(ValidationErrors) as ve:
         await create_service(m, InterfaceService).do_update('em0', {
@@ -259,10 +270,12 @@ async def test__interfaces_service__create_vlan_invalid_parent_used():
     m['interface.query'] = Mock(return_value=INTERFACES_WITH_LAG)
     m['datastore.query'] = Mock(return_value=[])
     m['network.common.check_failover_disabled'] = Mock()
+    m['interface.validate_name'] = Mock()
 
     with pytest.raises(ValidationErrors) as ve:
         await create_service(m, InterfaceService).do_create({
             'type': 'VLAN',
+            'name': 'myvlan1',
             'vlan_tag': 5,
             'vlan_parent_interface': 'em0',
         })
@@ -297,7 +310,8 @@ async def test__interfaces_service__update_vlan_mtu_bigger_parent():
     m['network.common.check_failover_disabled'] = Mock()
 
     with pytest.raises(ValidationErrors) as ve:
-        await create_service(m, InterfaceService).do_update(INTERFACES_WITH_VLAN[-1]['id'], {
+        await create_service(m, InterfaceService).do_update(
+            INTERFACES_WITH_VLAN[-1]['id'], {
             'mtu': 9000,
         })
     assert 'interface_update.mtu' in ve.value
@@ -315,6 +329,7 @@ async def test__interfaces_service__update_two_dhcp():
         {'int_interface': interfaces_with_one_dhcp[0]['name'], 'int_dhcp': True, 'int_ipv6auto': False}
     ])
     m['network.common.check_failover_disabled'] = Mock()
+    m['interface.validate_name'] = Mock()
 
     update_interface = interfaces_with_one_dhcp[1]
 
@@ -340,6 +355,7 @@ async def test__interfaces_service__update_two_same_network():
     m['datastore.query'] = Mock(return_value=[])
     m['datastore.insert'] = Mock(return_value=5)
     m['network.common.check_failover_disabled'] = Mock()
+    m['interface.validate_name'] = Mock()
 
     update_interface = interfaces_one_network[1]
 
