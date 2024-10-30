@@ -19,8 +19,13 @@ import middlewared.sqlalchemy as sa
 from middlewared.utils.asyncio_ import asyncio_map
 from middlewared.utils.time_utils import utc_now
 from middlewared.api.current import (
-    AtaSelfTest, NvmeSelfTest, ScsiSelfTest
+    AtaSelfTest, NvmeSelfTest, ScsiSelfTest,
+    SmartQueryForDiskArgs, SmartQueryForDiskResult,
+    SmartDiskChoicesArgs, SmartDiskChoicesResult,
+    SmartDiskCreateArgs, SmartDiskCreateResult,
+    SmartManualTestArgs, SmartManualTestResult,
 )
+from middlewared.api import api_method
 
 
 RE_TIME = re.compile(r'test will complete after ([a-z]{3} [a-z]{3} [0-9 ]+ \d\d:\d\d:\d\d \d{4})', re.IGNORECASE)
@@ -316,7 +321,7 @@ class SMARTTestService(CRUDService):
 
         return verrors
 
-    @accepts(Str('disk'), roles=['REPORTING_READ'])
+    @api_method(SmartQueryForDiskArgs, SmartQueryForDiskResult, roles=['REPORTING_READ'])
     async def query_for_disk(self, disk_name):
         """
         Query S.M.A.R.T. tests for the specified disk name.
@@ -329,7 +334,7 @@ class SMARTTestService(CRUDService):
             if test['all_disks'] or disk['identifier'] in test['disks']
         ]
 
-    @accepts(Bool('full_disk', default=False))
+    @api_method(SmartDiskChoicesArgs, SmartDiskChoicesResult)
     async def disk_choices(self, full_disk):
         """
         Returns disk choices for S.M.A.R.T. test.
@@ -342,20 +347,7 @@ class SMARTTestService(CRUDService):
             if await self.middleware.call('disk.smartctl_args', disk['name']) is not None
         }
 
-    @accepts(
-        Dict(
-            'smart_task_create',
-            Cron(
-                'schedule',
-                exclude=['minute']
-            ),
-            Str('desc'),
-            Bool('all_disks', default=False),
-            List('disks', items=[Str('disk')]),
-            Str('type', enum=['LONG', 'SHORT', 'CONVEYANCE', 'OFFLINE'], required=True),
-            register=True
-        )
-    )
+    @api_method(SmartDiskCreateArgs, SmartDiskCreateResult)
     async def do_create(self, data):
         """
         Create a SMART Test Task.
@@ -450,26 +442,7 @@ class SMARTTestService(CRUDService):
 
         return response
 
-    @accepts(
-        List(
-            'disks', items=[
-                Dict(
-                    'disk_run',
-                    Str('identifier', required=True),
-                    Str('mode', enum=['FOREGROUND', 'BACKGROUND'], default='BACKGROUND'),
-                    Str('type', enum=['LONG', 'SHORT', 'CONVEYANCE', 'OFFLINE'], required=True),
-                )
-            ]
-        )
-    )
-    @returns(List('smart_manual_test', items=[Dict(
-        'smart_manual_test_disk_response',
-        Str('disk', required=True),
-        Str('identifier', required=True),
-        Str('error', required=True, null=True),
-        Datetime('expected_result_time'),
-        Int('job'),
-    )]))
+    @api_method(SmartManualTestArgs, SmartManualTestResult)
     async def manual_test(self, disks):
         """
         Run manual SMART tests for `disks`.
