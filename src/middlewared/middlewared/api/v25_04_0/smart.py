@@ -7,8 +7,39 @@ __all__ = [
     "SmartQueryForDiskArgs", "SmartQueryForDiskResult",
     "SmartDiskChoicesArgs", "SmartDiskChoicesResult",
     "SmartDiskCreateArgs", "SmartDiskCreateResult",
-    "SmartManualTestArgs", "SmartManualTestResult"
+    "SmartDiskUpdateArgs", "SmartDiskUpdateResult",
+    "SmartDiskDeleteArgs", "SmartDiskDeleteResult",
+    "SmartManualTestArgs", "SmartManualTestResult",
+    "SmartTestAbortArgs", "SmartTestAbortResult",
+    "SmartTestResultArgs", "SmartTestResultResult"
 ]
+
+class SmartTestResultArgs(BaseModel):
+    pass
+
+class SmartTestResultItem(BaseModel):
+    num: int
+    description: str
+    status: str
+    status_verbose: str
+    segment_number: int
+    remaining: float
+    lifetime: int | None
+    lba_of_first_error: str | None
+
+class SmartTestResultCurrentTest(BaseModel):
+    progress: int
+
+class SmartTestResultResult(BaseModel):
+    disk: str
+    tests: list[SmartTestResultItem]
+    current_test: SmartTestResultCurrentTest | None
+
+class SmartTestAbortArgs(BaseModel):
+    disk: str
+
+class SmartTestAbortResult(BaseModel):
+    result: None
 
 class SmartManualTestDiskRun(BaseModel):
     identifier: str
@@ -34,15 +65,31 @@ class SmartDiskCronSchedule(BaseModel):
     month: str = "*"
     dow: str = "*"
 
-class SmartDiskCreateArgs(BaseModel):
+class SmartDiskEntry(BaseModel):
     schedule: SmartDiskCronSchedule
     desc: str | None
     all_disks: bool = False
     disks: list[str] = []
     type: Literal["LONG", "SHORT", "CONVEYANCE", "OFFLINE"]
 
+class SmartDiskCreateArgs(BaseModel):
+    data: SmartDiskEntry
+
 class SmartDiskCreateResult(BaseModel):
     result: dict # update to smart query result
+
+class SmartDiskUpdateArgs(BaseModel):
+    id: int
+    data: SmartDiskEntry
+
+class SmartDiskUpdateResult(BaseModel):
+    result: dict # update to smart query result
+
+class SmartDiskDeleteArgs(BaseModel):
+    id: str
+
+class SmartDiskDeleteResult(BaseModel):
+    result: bool
 
 class SmartDiskChoicesArgs(BaseModel):
     full_disk: bool = False

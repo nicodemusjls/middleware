@@ -12,7 +12,8 @@ from middlewared.common.smart.smartctl import SMARTCTL_POWERMODES
 from middlewared.plugins.smart_.schedule import SMARTD_SCHEDULE_PIECES, smartd_schedule_piece_values
 from middlewared.schema import accepts, Bool, Cron, Datetime, Dict, Int, Float, List, Patch, returns, Str
 from middlewared.service import (
-    CRUDService, filterable, filterable_returns, filter_list, job, private, SystemServiceService, ValidationErrors
+    CRUDService, filterable, filterable_returns, filter_list, job, private, filterable_api_method,
+    SystemServiceService, ValidationErrors
 )
 from middlewared.service_exception import CallError
 import middlewared.sqlalchemy as sa
@@ -23,7 +24,11 @@ from middlewared.api.current import (
     SmartQueryForDiskArgs, SmartQueryForDiskResult,
     SmartDiskChoicesArgs, SmartDiskChoicesResult,
     SmartDiskCreateArgs, SmartDiskCreateResult,
+    SmartDiskUpdateArgs, SmartDiskUpdateResult,
+    SmartDiskDeleteArgs, SmartDiskDeleteResult,
     SmartManualTestArgs, SmartManualTestResult,
+    SmartTestAbortArgs, SmartTestAbortResult,
+    SmartTestResultArgs, SmartTestResultResult
 )
 from middlewared.api import api_method
 
@@ -400,6 +405,7 @@ class SMARTTestService(CRUDService):
 
         return await self.get_instance(data['id'])
 
+    @api_method(SmartDiskUpdateArgs, SmartDiskUpdateResult)
     async def do_update(self, id_, data):
         """
         Update SMART Test Task of `id`.
@@ -428,6 +434,7 @@ class SMARTTestService(CRUDService):
 
         return await self.get_instance(id_)
 
+    @api_method(SmartDiskDeleteArgs, SmartDiskDeleteResult)
     async def do_delete(self, id_):
         """
         Delete SMART Test Task of `id`.
@@ -544,28 +551,7 @@ class SMARTTestService(CRUDService):
             **output
         }
 
-    @filterable(roles=['REPORTING_READ'])
-    @filterable_returns(Dict(
-        'disk_smart_test_result',
-        Str('disk', required=True),
-        List('tests', items=[Dict(
-            'test_result',
-            Int('num', required=True),
-            Str('description', required=True),
-            Str('status', required=True),
-            Str('status_verbose', required=True),
-            Int('segment_number', null=True),
-            Float('remaining'),
-            Int('lifetime', null=True, required=True),
-            Str('lba_of_first_error', null=True, required=True),
-        )]),
-        Dict(
-            'current_test',
-            Int('progress', required=True),
-            null=True,
-        ),
-        additional_attrs=True,
-    ))
+    @filterable_api_method(item=SmartTestResultResult, roles=['REPORTING_READ'])
     async def results(self, filters, options):
         """
         Get disk(s) S.M.A.R.T. test(s) results.
@@ -717,8 +703,7 @@ class SMARTTestService(CRUDService):
             await self.middleware.call('smart.test.abort', disk['disk'])
             raise
 
-    @accepts(Str('disk'))
-    @returns()
+    @api_method(SmartTestAbortArgs, SmartTestAbortResult)
     async def abort(self, disk):
         """
         Abort non-captive S.M.A.R.T. tests for disk.
