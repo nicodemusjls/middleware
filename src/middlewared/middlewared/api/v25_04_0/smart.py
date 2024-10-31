@@ -68,7 +68,7 @@ class SmartDiskCronSchedule(BaseModel):
 
 class SmartDiskEntry(BaseModel):
     schedule: SmartDiskCronSchedule
-    desc: str | None = None
+    desc: str = ""
     all_disks: bool = False
     disks: list[str] = []
     type: Literal["LONG", "SHORT", "CONVEYANCE", "OFFLINE"]
