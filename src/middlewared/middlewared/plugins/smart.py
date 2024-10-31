@@ -29,7 +29,7 @@ from middlewared.api.current import (
     SmartManualTestArgs, SmartManualTestResult,
     SmartTestAbortArgs, SmartTestAbortResult,
     SmartTestResultArgs, SmartTestResultResult,
-    SmartDiskEntry
+    SmartDiskCreateEntry
 )
 from middlewared.api import api_method
 
@@ -277,7 +277,7 @@ class SMARTTestService(CRUDService):
         datastore_prefix = 'smarttest_'
         namespace = 'smart.test'
         cli_namespace = 'task.smart_test'
-        entry = SmartDiskEntry
+        entry = SmartDiskCreateEntry
 
     ENTRY = Patch(
         'smart_task_create', 'smart_task_entry',
