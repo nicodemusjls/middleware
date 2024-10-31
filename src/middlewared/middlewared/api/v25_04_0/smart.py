@@ -12,7 +12,7 @@ __all__ = [
     "SmartManualTestArgs", "SmartManualTestResult",
     "SmartTestAbortArgs", "SmartTestAbortResult",
     "SmartTestResultArgs", "SmartTestResultResult",
-    "SmartDiskCreateEntry"
+    "SmartDiskEntry"
 ]
 
 class SmartTestResultArgs(BaseModel):

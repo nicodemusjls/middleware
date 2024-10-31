@@ -29,7 +29,7 @@ from middlewared.api.current import (
     SmartManualTestArgs, SmartManualTestResult,
     SmartTestAbortArgs, SmartTestAbortResult,
     SmartTestResultArgs, SmartTestResultResult,
-    SmartDiskCreateEntry
+    SmartDiskEntry
 )
 from middlewared.api import api_method
 
