@@ -79,7 +79,7 @@ class SmartDiskCreateArgs(BaseModel):
 class SmartDiskCreateResult(BaseModel):
     result: dict # update to smart query result
 
-class SmartDiskUpdate(SmartDiskCreateEntry, metaclass=ForUpdateMetaclass):
+class SmartDiskUpdate(SmartDiskEntry, metaclass=ForUpdateMetaclass):
     pass
 
 class SmartDiskUpdateArgs(BaseModel):
