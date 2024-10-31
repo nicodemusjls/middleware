@@ -78,7 +78,7 @@ class SmartDiskCreateEntry(SmartDiskEntry):
     id: Excluded = excluded_field()
 
 class SmartDiskCreateArgs(BaseModel):
-    data: SmartDiskEntry
+    data: SmartDiskCreateEntry
 
 class SmartDiskCreateResult(BaseModel):
     result: dict # update to smart query result
