@@ -1,4 +1,4 @@
-from middlewared.api.base import BaseModel
+from middlewared.api.base import BaseModel, Excluded, excluded_field, ForUpdateMetaclass
 from typing import Literal
 from datetime import datetime
 
@@ -11,7 +11,8 @@ __all__ = [
     "SmartDiskDeleteArgs", "SmartDiskDeleteResult",
     "SmartManualTestArgs", "SmartManualTestResult",
     "SmartTestAbortArgs", "SmartTestAbortResult",
-    "SmartTestResultArgs", "SmartTestResultResult"
+    "SmartTestResultArgs", "SmartTestResultResult",
+    "SmartDiskEntry"
 ]
 
 class SmartTestResultArgs(BaseModel):
@@ -71,6 +72,10 @@ class SmartDiskEntry(BaseModel):
     all_disks: bool = False
     disks: list[str] = []
     type: Literal["LONG", "SHORT", "CONVEYANCE", "OFFLINE"]
+    id: int
+
+class SmartDiskCreateEntry(SmartDiskEntry):
+    id: Excluded = excluded_field()
 
 class SmartDiskCreateArgs(BaseModel):
     data: SmartDiskEntry
@@ -78,9 +83,12 @@ class SmartDiskCreateArgs(BaseModel):
 class SmartDiskCreateResult(BaseModel):
     result: dict # update to smart query result
 
+class SmartDiskUpdate(SmartDiskCreateEntry, metaclass=ForUpdateMetaClass):
+    pass
+
 class SmartDiskUpdateArgs(BaseModel):
     id: int
-    data: SmartDiskEntry
+    data: SmartDiskUpdate
 
 class SmartDiskUpdateResult(BaseModel):
     result: dict # update to smart query result
