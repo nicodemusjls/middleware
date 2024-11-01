@@ -277,7 +277,7 @@ class SMARTTestService(CRUDService):
         datastore_prefix = 'smarttest_'
         namespace = 'smart.test'
         cli_namespace = 'task.smart_test'
-        entry = SmartDiskCreateEntry
+        entry = SmartDiskEntry
 
     ENTRY = Patch(
         'smart_task_create', 'smart_task_entry',
