@@ -72,9 +72,13 @@ class SmartDiskEntry(BaseModel):
     all_disks: bool = False
     disks: list[str] = []
     type: Literal["LONG", "SHORT", "CONVEYANCE", "OFFLINE"]
+    id: int
+
+class SmartDiskCreate(SmartDiskEntry):
+    id: Excluded = excluded_field()
 
 class SmartDiskCreateArgs(BaseModel):
-    data: SmartDiskEntry
+    data: SmartDiskCreate
 
 class SmartDiskCreateResult(BaseModel):
     result: dict # update to smart query result
