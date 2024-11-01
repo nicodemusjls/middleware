@@ -72,7 +72,7 @@ class SmartDiskEntry(BaseModel):
     all_disks: bool = False
     disks: list[str] = []
     type: Literal["LONG", "SHORT", "CONVEYANCE", "OFFLINE"]
-    id: int
+    id: str
 
 class SmartDiskCreate(SmartDiskEntry):
     id: Excluded = excluded_field()
