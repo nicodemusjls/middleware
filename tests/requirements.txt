@@ -11,7 +11,7 @@ pyvmomi==7.0.3
 requests
 websocket-client>=1.4.2
 pyotp
-cython-iscsi @ git+https://github.com/truenas/cython-iscsi.git@tester
+cython-iscsi @ git+https://github.com/truenas/cython-iscsi.git@update_tester_from_master
 PYSCSI @ git+https://github.com/truenas/python-scsi.git@tester
 pysnmplib
 zeroconf
