@@ -828,8 +828,11 @@ def test__discover_from_initiator(iscsi_running):
     EMPTY_SET = set()
     ONE_IQN_SET = set([iqn1])
     TWO_IQNS_SET = set([iqn1, iqn2])
+    DISCOVER_DELAY = 10
 
     def _discovery_validate_two_targets(ip: str, discs: dict, delay: int | None = None):
+        if delay:
+            sleep(delay)
         _discovery_validate_one(discs['nocred'], TWO_IQNS_SET)
         _discovery_validate_one(discs['user1'], TWO_IQNS_SET)
         _discovery_validate_one(discs['user2'], EMPTY_SET)
@@ -919,8 +922,8 @@ def test__discover_from_initiator(iscsi_running):
                             with configured_target(config, name2, "VOLUME"):
                                 # We will delay after changes when querying the STANDBY node
                                 node = call('failover.node')
-                                nodeb_delay = 10 if node == 'A' else None
-                                nodea_delay = 10 if node == 'B' else None
+                                nodeb_delay = DISCOVER_DELAY if node == 'A' else None
+                                nodea_delay = DISCOVER_DELAY if node == 'B' else None
                                 _discovery_validate_two_targets(truenas_server.nodea_ip, nodea_discs, nodea_delay)
                                 _discovery_validate_two_targets(truenas_server.nodeb_ip, nodeb_discs, nodeb_delay)
 
