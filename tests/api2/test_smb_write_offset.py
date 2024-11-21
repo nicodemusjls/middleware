@@ -5,6 +5,7 @@ import random
 from middlewared.test.integration.assets.account import user, group
 from middlewared.test.integration.assets.pool import dataset
 from middlewared.test.integration.assets.smb import smb_share
+from middlewared.test.integration.utils import call
 
 from protocols import smb_connection
 
