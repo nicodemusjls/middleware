@@ -3,6 +3,7 @@ import random
 
 from middlewared.test.integration.assets.account import user, group
 from middlewared.test.integration.assets.pool import dataset
+from middlewared.test.integration.utils.smb import smb_share
 
 from protocols import smb_connection
 
