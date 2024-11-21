@@ -61,7 +61,7 @@ def test_invalid_offset(setup_smb_tests):
     ) as c:
         fd = c.create_file('file_valid_offset', 'w')
 
-        with pytest.raises(NTSTATUSError) as nterr:
+        with pytest.raises(NTSTATUSError) as nt_err:
             c.write(fd, offset=INVALID_OFFSET, data=b'CANARY')
 
         assert nt_err.value.args[0] == ntstatus.NT_STATUS_INVALID_PARAMETER
