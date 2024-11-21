@@ -30,7 +30,7 @@ def setup_smb_tests():
             with smb_share(os.path.join('/mnt', ds), SHARE_NAME) as s:
                 try:
                     call('service.start', 'cifs')
-                    yield {'dataset': ds, 'share': s, 'user': u}
+                    yield (ds, s, u)
                 finally:
                     call('service.stop', 'cifs')
 
