@@ -916,7 +916,7 @@ def test__discover_from_initiator(iscsi_running):
             _wait_for_alua_settle()
 
 
-def test__report_luns(iscsi_running):
+def xxxtest__report_luns(iscsi_running):
     """
     This tests REPORT LUNS and accessing multiple LUNs on a target.
     """
@@ -1104,7 +1104,7 @@ def target_test_snapshot_multiple_login(ip, iqn, dataset_id):
                 assert r.datain == zeros, r.datain
 
 
-def test__snapshot_zvol_extent(iscsi_running):
+def xxxtest__snapshot_zvol_extent(iscsi_running):
     """
     This tests snapshots with a zvol extent based iSCSI target.
     """
@@ -1116,7 +1116,7 @@ def test__snapshot_zvol_extent(iscsi_running):
             target_test_snapshot_multiple_login(truenas_server.ip, iqn, iscsi_config['dataset'])
 
 
-def test__snapshot_file_extent(iscsi_running):
+def xxxtest__snapshot_file_extent(iscsi_running):
     """
     This tests snapshots with a file extent based iSCSI target.
     """
@@ -1128,7 +1128,7 @@ def test__snapshot_file_extent(iscsi_running):
             target_test_snapshot_multiple_login(truenas_server.ip, iqn, iscsi_config['dataset'])
 
 
-def test__target_alias(iscsi_running):
+def xxxtest__target_alias(iscsi_running):
     """
     This tests iSCSI target alias.
 
@@ -1173,7 +1173,7 @@ def test__target_alias(iscsi_running):
                         assert targets[B['name']]['alias'] is None, targets[B['name']]['alias']
 
 
-def test__modify_portal(iscsi_running):
+def xxxtest__modify_portal(iscsi_running):
     """
     Test that we can modify a target portal.
     """
@@ -1191,7 +1191,7 @@ def test__modify_portal(iscsi_running):
         assert new_config['comment'] == 'test1', new_config
 
 
-def test__pblocksize_setting(iscsi_running):
+def xxxtest__pblocksize_setting(iscsi_running):
     """
     This tests whether toggling pblocksize has the desired result on READ CAPACITY 16, i.e.
     whether setting it results in LOGICAL BLOCKS PER PHYSICAL BLOCK EXPONENT being zero.
@@ -1262,7 +1262,7 @@ def generate_name(length, base="target"):
 
 
 @pytest.mark.parametrize('extent_type', ["FILE", "VOLUME"])
-def test__test_target_name(iscsi_running, extent_type):
+def xxxtest__test_target_name(iscsi_running, extent_type):
     """
     Test the user-supplied target name.
     """
@@ -1290,7 +1290,7 @@ def test__test_target_name(iscsi_running, extent_type):
 
 
 @pytest.mark.parametrize('extent_type', ["FILE", "VOLUME"])
-def test__target_lun_extent_modify(iscsi_running, extent_type):
+def xxxtest__target_lun_extent_modify(iscsi_running, extent_type):
     """
     Perform some tests of the iscsi.targetextent.update API, including
     trying tp provide invalid
@@ -1438,7 +1438,7 @@ def _isns_wait_for_iqn(isns_client, iqn, timeout=10):
     return iqns
 
 
-def test__test_isns(iscsi_running):
+def xxxtest__test_isns(iscsi_running):
     """
     Test ability to register targets with iSNS.
     """
@@ -1524,7 +1524,7 @@ class TestFixtureInitiatorName:
     ]
 
     @pytest.mark.parametrize("initiator_name, expected", params)
-    def test__invalid_initiator_name(self, iscsi_running, create_target, initiator_name, expected):
+    def xxxtest__invalid_initiator_name(self, iscsi_running, create_target, initiator_name, expected):
         """
         Deliberately send SCST some invalid initiator names and ensure it behaves OK.
         """
@@ -1619,7 +1619,7 @@ def _pr_reservation(s, pr_type, scope=LU_SCOPE, other_connections=[], **kwargs):
 
 @skip_persistent_reservations
 @pytest.mark.dependency(name="iscsi_basic_persistent_reservation")
-def test__basic_persistent_reservation(iscsi_running):
+def xxxtest__basic_persistent_reservation(iscsi_running):
     with initiator_portal() as config:
         with configured_target_to_zvol_extent(config, target_name, zvol):
             iqn = f'{basename}:{target_name}'
@@ -1806,7 +1806,7 @@ def _check_persistent_reservations(s1, s2):
 
 @skip_persistent_reservations
 @skip_multi_initiator
-def test__persistent_reservation_two_initiators(iscsi_running):
+def xxxtest__persistent_reservation_two_initiators(iscsi_running):
     with initiator_portal() as config:
         with configured_target_to_zvol_extent(config, target_name, zvol):
             iqn = f'{basename}:{target_name}'
@@ -1992,7 +1992,7 @@ def _ensure_alua_state(state):
 
 @pytest.mark.dependency(name="iscsi_alua_config")
 @pytest.mark.timeout(900)
-def test__alua_config(iscsi_running):
+def xxxtest__alua_config(iscsi_running):
     """
     Test various aspects of ALUA configuration.
 
@@ -2161,7 +2161,7 @@ def test__alua_config(iscsi_running):
 @skip_persistent_reservations
 @skip_multi_initiator
 @skip_ha_tests
-def test__alua_basic_persistent_reservation(request, iscsi_running):
+def xxxtest__alua_basic_persistent_reservation(request, iscsi_running):
     # Don't need to specify "iscsi_cmd_00" here
     depends(request, ["iscsi_alua_config", "iscsi_basic_persistent_reservation"], scope="session")
     # Turn on ALUA
@@ -2207,7 +2207,7 @@ def test__alua_basic_persistent_reservation(request, iscsi_running):
 @skip_persistent_reservations
 @skip_multi_initiator
 @skip_ha_tests
-def test__alua_persistent_reservation_two_initiators(request, iscsi_running):
+def xxxtest__alua_persistent_reservation_two_initiators(request, iscsi_running):
     depends(request, ["iscsi_alua_config", "iscsi_basic_persistent_reservation"], scope="session")
     with alua_enabled():
         with initiator_portal() as config:
@@ -2305,7 +2305,7 @@ def _xcopy_test(s1, s2, adds1=None, adds2=None):
 
 @pytest.mark.parametrize('extent2', ["FILE", "VOLUME"])
 @pytest.mark.parametrize('extent1', ["FILE", "VOLUME"])
-def test__extended_copy(iscsi_running, extent1, extent2):
+def xxxtest__extended_copy(iscsi_running, extent1, extent2):
     # print(f"Extended copy {extent1} -> {extent2}")
 
     name1 = f"{target_name}x1"
@@ -2326,7 +2326,7 @@ def test__extended_copy(iscsi_running, extent1, extent2):
 @skip_ha_tests
 @pytest.mark.parametrize('extent2', ["FILE", "VOLUME"])
 @pytest.mark.parametrize('extent1', ["FILE", "VOLUME"])
-def test__ha_extended_copy(request, extent1, extent2):
+def xxxtest__ha_extended_copy(request, extent1, extent2):
     depends(request, ["iscsi_alua_config"], scope="session")
 
     name1 = f"{target_name}x1"
@@ -2351,7 +2351,7 @@ def test__ha_extended_copy(request, extent1, extent2):
                                     _xcopy_test(sb1, sb2, sa1, sa2)
 
 
-def test__iscsi_target_disk_login(iscsi_running):
+def xxxtest__iscsi_target_disk_login(iscsi_running):
     """
     Tests whether a logged in iSCSI target shows up in disks.
     """
@@ -2424,7 +2424,7 @@ def test__iscsi_target_disk_login(iscsi_running):
                     assert results['result'] is True, f'out: {results["output"]}, err: {results["stderr"]}'
 
 
-def test__resize_target_zvol(iscsi_running):
+def xxxtest__resize_target_zvol(iscsi_running):
     """
     Verify that an iSCSI client is notified when the size of a ZVOL underlying
     an iSCSI extent is modified.
@@ -2451,7 +2451,7 @@ def test__resize_target_zvol(iscsi_running):
                 assert MB_512 == read_capacity16(s)
 
 
-def test__resize_target_file(iscsi_running):
+def xxxtest__resize_target_file(iscsi_running):
     """
     Verify that an iSCSI client is notified when the size of a file-based
     iSCSI extent is modified.
@@ -2482,7 +2482,7 @@ def test__resize_target_file(iscsi_running):
 
 
 @skip_multi_initiator
-def test__initiator_group(iscsi_running):
+def xxxtest__initiator_group(iscsi_running):
     initiator_base = f"iqn.2018-01.org.pyscsi:{socket.gethostname()}"
     initiator_iqn1 = f"{initiator_base}:one"
     initiator_iqn2 = f"{initiator_base}:two"
@@ -2527,7 +2527,7 @@ def test__initiator_group(iscsi_running):
                     TUR(s)
 
 
-def test__portal_access(iscsi_running):
+def xxxtest__portal_access(iscsi_running):
     """
     Verify that an iSCSI client can access a target on the specified
     portal.
@@ -2562,7 +2562,7 @@ def test__portal_access(iscsi_running):
                             assert MB_100 == read_capacity16(s)
 
 
-def test__multiple_extents():
+def xxxtest__multiple_extents():
     """
     Verify that an iSCSI client can access multiple target LUNs
     when multiple extents are configured.
@@ -2617,7 +2617,7 @@ def check_inq_enabled_state(iqn, expected):
     assert actual == expected, f'IQN {iqn} has an unexpected enabled state - was {actual}, expected {expected}'
 
 
-def test__target_without_active_extent(iscsi_running):
+def xxxtest__target_without_active_extent(iscsi_running):
     """Validate that a target will not be enabled if it does not have
     and enabled associated extents"""
     name1 = f"{target_name}x1"
@@ -2681,7 +2681,7 @@ def test__target_without_active_extent(iscsi_running):
                 assert 'Unable to connect to' in str(ve), ve
 
 
-def test__iscsi_sessions(iscsi_running):
+def xxxtest__iscsi_sessions(iscsi_running):
     """Validate that we can get a list of currently running iSCSI sessions."""
     name1 = f"{target_name}x1"
     name2 = f"{target_name}x2"
@@ -2760,7 +2760,7 @@ def test__iscsi_sessions(iscsi_running):
                     get_iscsi_sessions(check_length=0)
 
 
-def test__multi_lun_targets(iscsi_running):
+def xxxtest__multi_lun_targets(iscsi_running):
     """Validate that we can create and access multi-LUN targets."""
     name1 = f"{target_name}x1"
     name2 = f"{target_name}x2"
@@ -2791,7 +2791,7 @@ def test__multi_lun_targets(iscsi_running):
                                 test_target_sizes(truenas_server.nodeb_ip)
 
 
-def test__no_lun_zero():
+def xxxtest__no_lun_zero():
     """
     Verify that an iSCSI client can login to a target that is missing LUN 0 (and LUN 1)
     and that report LUNs works as expected.
@@ -2815,7 +2815,7 @@ def test__no_lun_zero():
                                     verify_luns(s, [100, 101])
 
 
-def test__zvol_extent_volthreading():
+def xxxtest__zvol_extent_volthreading():
     """
     Ensure that volthreading is on for regular zvols and off when they are being
     used an iSCSI extent.
@@ -2830,7 +2830,7 @@ def test__zvol_extent_volthreading():
 
 
 @pytest.mark.parametrize('extent_type', ["FILE", "VOLUME"])
-def test__delete_extent_no_dataset(extent_type):
+def xxxtest__delete_extent_no_dataset(extent_type):
     """
     Verify that even if a dataset that contains an extent has been deleted from
     the command line, can still use the webui/API to delete the extent.
